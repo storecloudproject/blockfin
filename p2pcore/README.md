@@ -25,6 +25,7 @@ As described in the previous section, the nodes generate secret key, public key 
 
 }
 ```
+
 Listing 1 — The identity of a node in BlockFin
 
 BlockFin’s communication core is built using [Secure Scuttlebutt](https://github.com/ssbc/secure-scuttlebutt) (SSBC). SSBC is a database of unforgeable append-only feeds, optimized for efficient replication for peer to peer protocols. BlockFin makes use of the following features offered by SSBC.
@@ -89,6 +90,7 @@ Although we have two types of nodes in BlockFin — validators and Messagenodes 
 
 There may be other minor roles possible, which will be added as the need arises. Note how the same nodes assume different roles based on the task being performed. Each of these roles has an associated identity, so the nodes can sign with the assumed identities instead of their global identity as a validator or Messagenode. So, the signing protocol is, "Validator V signed *as Precommitter*" rather than “Validator V signed”. Listing 2 shows an example of role identity owned by a node. It is similar to listing 1, except for the “owerid” attribute, which identifies associated node who assumes this role (and hence identity) and “role”, which specifies the role this identity is tied to.
 
+```
 {
 
   "curve": "ed25519",
@@ -101,9 +103,10 @@ There may be other minor roles possible, which will be added as the need arises.
 
   **"ownerid": "@s9+ZsrSDXz7WdQ6ED7Ry3+tN8tTzl3J0DEIuTn/tXrU=.ed25519",**
 
-**  "role": "precommitter"**
+  **"role": "precommitter"**
 
 }
+```
 
 Listing 2 — The identity of a role that the associated node assumes
 
@@ -151,6 +154,7 @@ Because of this, not all the nodes need to store all the information like in tra
 
 The feed consists of a series of messages. As discussed above, a feed is associated with an identity and hence the messages in the feed are scoped to the identity and are about the identity. A sample message is as shown in listing 3 below.
 
+```
 {
 
   "previous": "%26AC+gU0t74jRGVeDY013cVghlZRc0nfUAnMnutGGHM=.sha256",
@@ -184,6 +188,7 @@ The feed consists of a series of messages. As discussed above, a feed is associa
   "signature": "Sjq1C3yiKdmi1TWvNqxIk1ZQBf4pPJYl0HHRDVf/xjm5tWJHBaW4kXo6mHPcUMbJYUtc03IvPwVqB+BMnBgmAQ==.sig.ed25519"
 
 }
+```
 
 Listing 3 — A sample message in a feed
 
