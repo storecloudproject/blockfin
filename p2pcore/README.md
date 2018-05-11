@@ -12,6 +12,7 @@ The remainder of this document describes how nodes communicate, authenticate tha
 
 As described in the previous section, the nodes generate secret key, public key pair in a private, secure setting. The specifics of key generation is outside the scope of this document. The nodes use their respective secret keys to sign the messages they create, which can be verified by other nodes using the creators’ public keys. The identity of a node looks like follows. 
 
+```
 {
 
   "curve": "ed25519",
@@ -23,7 +24,7 @@ As described in the previous section, the nodes generate secret key, public key 
   "id": "@s9+ZsrSDXz7WdQ6ED7Ry3+tN8tTzl3J0DEIuTn/tXrU=.ed25519"
 
 }
-
+```
 Listing 1 — The identity of a node in BlockFin
 
 BlockFin’s communication core is built using [Secure Scuttlebutt](https://github.com/ssbc/secure-scuttlebutt) (SSBC). SSBC is a database of unforgeable append-only feeds, optimized for efficient replication for peer to peer protocols. BlockFin makes use of the following features offered by SSBC.
