@@ -8,7 +8,7 @@ In order to participate in BlockFin consensus, the nodes need to deposit predefi
 
 The remainder of this document describes how nodes communicate, authenticate that the messages exchanged are genuine, and the underlying data model itself.
 
-## p2p Communication
+## p2p communication
 
 As described in the previous section, the nodes generate secret key, public key pair in a private, secure setting. The specifics of key generation is outside the scope of this document. The nodes use their respective secret keys to sign the messages they create, which can be verified by other nodes using the creators’ public keys. The identity of a node looks like follows. 
 
