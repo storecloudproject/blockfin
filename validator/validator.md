@@ -1,7 +1,7 @@
 # Directories:
 
-Validator module: 		blockfin/validator
-Messagenode module: 	blockfin/messagenode
+- Validator module: 	blockfin/validator
+- Messagenode module: 	blockfin/messagenode
 
 # Prerequisites:
 
