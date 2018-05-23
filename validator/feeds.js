@@ -19,7 +19,7 @@ ssbClient(keys, {
     }
   },
   function (err, sbot, config) {
-    if (err) { return; }
+    if (err) { console.log(err); return; }
     var roles = ['precommitter']; //['tx-receiver', 'precommitter', 'committer', 'sealer'];
     
     // Follow Messagenode. Required only once.
@@ -37,7 +37,7 @@ ssbClient(keys, {
         console.log(events)
     })
        
-    for (var n = 0; n < 100; n++) {
+    /*for (var n = 0; n < 100; n++) {
         sbot.publish({
                 type: 'post',
                 text: ('hello world, I am primary validator feed. Index: ' + n)
@@ -46,29 +46,29 @@ ssbClient(keys, {
                 //console.log(' Published: ')
                 //console.log(msg)
         }) 
-    }
+    }*/
     
     // Create one feed for each roles.
-    /*roles.forEach(function(role) {
+    roles.forEach(function(role) {
         var roleKeys = ssbKeys.loadOrCreateSync('.ssb/' + role)
         console.log('Creating feed for for ' + role)
 
         var feed = ssbFeed(sbot, roleKeys)
 
         // Post to the created feed
-        for (var n = 0; n < 2000; n++) {
+        for (var n = 0; n < 2; n++) {
             feed.publish({
                 type: 'post',
-                text: ('hello world, I am ' + role + '. Index: ' + n)
+                text: ('Hi world, I am ' + role + '. Index: ' + n)
               }, 
                 function (err, msg) { 
-                //console.log(' Published: ')
-                //console.log(msg)
+                console.log(' Published: ')
+                console.log(msg)
             })    
         }
         
 
-    })*/
+    })
         
   }
 )
