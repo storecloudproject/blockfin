@@ -5,6 +5,7 @@
 const AccountGroup = require('./account-group.js');
 const ValidatorGroup = require('./validator-group.js');
 const MessageNodeGroup = require('./messagenode-group.js');
+const Config = require('../config.js')
 
 module.exports = class CoreAPIs {
     constructor(App) {
@@ -131,6 +132,19 @@ module.exports = class CoreAPIs {
                 res.status(500).json({status: 'error', message: 'BlockFin simulator is not launched.'});
             } else {
                 res.status(200).json({status: 'success', mempool: that.messageNodeGroup.transactionBatches(req.query.messagenode)});
+            }
+            
+        });
+        
+        /*
+         * Dump the config used for the simulation.
+         */
+        
+        this.App.get(this.apiPrefix+'/show-config', function(req, res) {
+            if (!that.validatorGroup) {
+                res.status(500).json({status: 'error', message: 'BlockFin simulator is not launched.'});
+            } else {
+                res.status(200).json({status: 'success', config: Config.dump()});
             }
             
         });

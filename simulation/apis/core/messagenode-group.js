@@ -1,6 +1,7 @@
 const MessageNode = require('./messagenode.js');
 const Utils = require('../utils.js');
 const PubSub = require('pubsub-js');
+const Config = require('../config.js')
 
 /*
  * Represents a group of message nodes to ease collecting transaction batches and simulate message nodes assembling the blocks in blockchain.
@@ -9,6 +10,7 @@ const PubSub = require('pubsub-js');
 module.exports = class MessageNodeGroup {
     constructor(totalMessageNodes) {
         this.totalMessageNodes = (totalMessageNodes || 16);  // Total number of message nodes. Defaults to allow for 5 Byzantine message nodes.
+        Config.network.totalMessageNodes = this.totalMessageNodes;
         this.messageNodes = [];
         this.setupMessageNodes(); 
     }
@@ -17,7 +19,9 @@ module.exports = class MessageNodeGroup {
     setupMessageNodes() {
         let that = this;
         for (let m = 0; m < this.totalMessageNodes; m++) {
-            this.messageNodes.push(new MessageNode('messageNode' + (m+1)));
+            let messageNode = new MessageNode('messageNode' + (m+1));
+            Config.addMessageNodeKey(messageNode.identifier);
+            this.messageNodes.push(messageNode);
         }
         PubSub.subscribe('transaction-batch', (msg, data) => {
             that.sprayTransactionBatches(data);

@@ -29,6 +29,14 @@ class MessageNode {
         this._ARB_STAGE = 2;
         this._VECTOR_STAGE = 3;
         
+        // Byzantine behaviors. Not exhaustive, but enough to test the simulation.
+        this._BYZANTINE_HONEST = 0;
+        this._BYZANTINE_MESSAGE_DROPPER = 1;
+        this._BYZANTINE_MESSAGE_DELAYER = 2;
+        this._BYZANTINE_MESSAGE_ALTERER = 3;
+        
+        this.myByzantineType = this._BYZANTINE_HONEST;   // By default, all nodes are honest.
+        
         this.currentStage = this._INPUT_STAGE;
         const that = this;
         PubSub.subscribe('INPUT', (msg, data) => {
@@ -47,12 +55,17 @@ class MessageNode {
         
         PubSub.subscribe('GOSSIP:VECTOR:'+this.id, (msg, data) => {
             // The agreed messages from other message nodes. data is a list of message nodes and their agreed upon hashes and supporting vectors.
+            
             that.processVectorMessage(data);
         })
     }
     
     get nodeId() {
         return this.id;    
+    }
+    
+    get byzantineType() {
+        return this.myByzantineType;
     }
     
     // Process transaction batches.
@@ -120,9 +133,8 @@ class MessageNode {
     
     checkARBProgress() {
         let arbMessageSources = Object.keys(this.ARB_received), // Source message nodes that gossipped.
-            hashAgreedByMajority = null,  // At least (N -f) sources must report the same value.
-            totalARBSources = arbMessageSources.length,
-            transactionSetsPerSource = [];
+            hashAgreedByMajority = null,  // At least (N -2f) sources must report the same value.
+            totalARBSources = arbMessageSources.length;
         
         const that = this;
         
@@ -139,7 +151,7 @@ class MessageNode {
                   minAgreement = (this.N - 2*this.f);
             
             for (let h = 0; h < hashCounterKeys.length; h++) {
-                if (hashCounter[hashCounterKeys[h]] > minAgreement) {
+                if (hashCounter[hashCounterKeys[h]] >= minAgreement) {
                     hashAgreedByMajority = hashCounterKeys[h];
                     break;
                 }
@@ -149,37 +161,36 @@ class MessageNode {
         return {hashAgreedByMajority: hashAgreedByMajority, totalARBSources: totalARBSources};
     }
     
+    // TO DO: all check*() functions can be unified and their behaviors can be consistent.
     checkVectorProgress() {
-        let arbMessageSources = Object.keys(this.ARB_received), // Source message nodes that gossipped.
-            hashAgreedByMajority = null,  // At least (N -f) sources must report the same value.
-            totalARBSources = arbMessageSources.length,
-            transactionSetsPerSource = [];
+        let vectorMessageSources = Object.keys(this.VECTOR_received), // Source message nodes that gossipped.
+            hashAgreedByMajority = null,  // At least (N -2f) sources must report the same value.
+            totalVectorSources = vectorMessageSources.length;
         
         const that = this;
         
-        if (totalARBSources > (this.N - this.f)) {
+        if (totalVectorSources > (this.N - this.f)) {
             let hashCounter = {};
-            arbMessageSources.forEach(source => {
-                if (hashCounter[that.ARB_received[source].hash] === undefined) {
-                    hashCounter[that.ARB_received[source].hash] = 1;
+            vectorMessageSources.forEach(source => {
+                if (hashCounter[that.VECTOR_received[source].agreedHash] === undefined) {
+                    hashCounter[that.VECTOR_received[source].agreedHash] = 1;
                 } else {
-                    hashCounter[that.ARB_received[source].hash] += 1;
+                    hashCounter[that.VECTOR_received[source].agreedHash] += 1;
                 }
             })
             const hashCounterKeys = Object.keys(hashCounter),
                   minAgreement = (this.N - 2*this.f);
             
             for (let h = 0; h < hashCounterKeys.length; h++) {
-                if (hashCounter[hashCounterKeys[h]] > minAgreement) {
+                if (hashCounter[hashCounterKeys[h]] >= minAgreement) {
                     hashAgreedByMajority = hashCounterKeys[h];
                     break;
                 }
             }
         }
         
-        return {hashAgreedByMajority: hashAgreedByMajority, totalARBSources: totalARBSources};
+        return {hashAgreedByMajority: hashAgreedByMajority, totalVectorSources: totalVectorSources};
     }
-    
     
     // gossippedMessages = list of transaction batches, consensusId = Id for this round of consensus.
     multiValueConsensus() {
@@ -206,6 +217,16 @@ class MessageNode {
         return hash;
     }
     
+    hashVectorMessage(message) {
+        // Each message in the vector contains ARB message.
+        let messageAsList = [];
+        Object.keys(message).sort().forEach(sortedMessageNodeId => {
+            messageAsList.push(message[sortedMessageNodeId].hash);
+        })  
+        const hash = Crypto.hash(JSON.stringify(messageAsList));
+        return hash;
+    }
+    
     verifyARBHash(hashToVerify, message) {
         return hashToVerify === this.hashARBMessage(message)
     }
@@ -220,30 +241,37 @@ class MessageNode {
     
     processARBMessage(message) {
         const that = this;
+        
         message = Array.isArray(message) ? message : [message];
         
+        let arbObject = this.ARB_received; 
+        
+        const beforeStatus = this.checkARBProgress();  
+        
         message.forEach(source => {
-            if (!that.ARB_received[source.node]) {
+            if (!arbObject[source.node]) {
                 // ARB messages per message node.
-                that.ARB_received[source.node] = {
+                arbObject[source.node] = {
                     hash: source.hash,
                     gossippedMessages: {}
                 };
             }
             
-            that.ARB_received[source.node].hash = source.hash;
-            that.ARB_received[source.node].gossippedMessages = source.gossippedMessages;
+            arbObject[source.node].hash = source.hash;
+            Object.keys(source.gossippedMessages).sort().forEach(messageNodeKey => {
+                // This is done so the individual messages are sorted by key order for visual purposes.
+                arbObject[source.node].gossippedMessages[messageNodeKey] = source.gossippedMessages[messageNodeKey]
+            })
         })
         
         const afterStatus = this.checkARBProgress();
     
-        if (afterStatus.totalARBSources > (this.N - this.f) ) {
-            console.log('------ ' + this.nodeId + ', sources: ' + afterStatus.totalARBSources +', agreed hash: ' + afterStatus.hashAgreedByMajority);
-            if (afterStatus.hashAgreedByMajority) {
-                this.vectorConsensus(hashAgreedByMajority);
+        if (afterStatus.totalARBSources >= (this.N - this.f)) {
+            // console.log('ARB ------ ' + this.nodeId + ', sources: ' + afterStatus.totalARBSources +', agreed hash: ' + afterStatus.hashAgreedByMajority);
+            if (afterStatus.hashAgreedByMajority && this.currentStage === this._ARB_STAGE) {  
+                this.vectorConsensus(afterStatus.hashAgreedByMajority);
             }
-            //console.log(prettifyJSON(Object.values(that.ARB_received)[0]))
-        } else {
+        } else if (afterStatus.totalARBSources > beforeStatus.totalARBSources) {
             let arbMessages = [];
             Object.keys(that.ARB_received).forEach(source => {
                 arbMessages.push({node: source, gossippedMessages: that.ARB_received[source].gossippedMessages, hash: that.ARB_received[source].hash});
@@ -257,33 +285,33 @@ class MessageNode {
         const that = this;
         message = Array.isArray(message) ? message : [message];
         
+        const beforeStatus = this.checkVectorProgress();
+        
         message.forEach(source => {
-            if (!that.Vector_received[source.node]) {
+            if (!that.VECTOR_received[source.node]) {
                 // ARB messages per message node.
-                that.Vector_received[source.node] = {
+                that.VECTOR_received[source.node] = {
                     agreedHash: source.agreedHash,
                     vectorMessages: {}
                 };
             }
             
-            that.Vector_received[source.node].agreedHash = source.agreedHash;
-            that.Vector_received[source.node].vectorMessages = source.vectorMessages;
+            that.VECTOR_received[source.node].agreedHash = source.agreedHash;
+            that.VECTOR_received[source.node].vectorMessages = source.vectorMessages;
         })
         
         const afterStatus = this.checkVectorProgress();
-    
-        if (afterStatus.totalARBSources > (this.N - this.f) ) {
-            console.log('------ ' + this.nodeId + ', sources: ' + afterStatus.totalARBSources +', agreed hash: ' + afterStatus.hashAgreedByMajority);
-            if (afterStatus.hashAgreedByMajority) {
-                this.vectorConsensus(hashAgreedByMajority);
-            }
-            //console.log(prettifyJSON(Object.values(that.ARB_received)[0]))
-        } else {
-            let arbMessages = [];
-            Object.keys(that.ARB_received).forEach(source => {
-                arbMessages.push({node: source, gossippedMessages: that.ARB_received[source].gossippedMessages, hash: that.ARB_received[source].hash});
+        
+        if (afterStatus.totalVectorSources >= (this.N - this.f) ) {
+            console.log('------VECTOR: ' + this.nodeId + ', sources: ' + afterStatus.totalVectorSources +', agreed hash: ' + afterStatus.hashAgreedByMajority);
+            console.log(prettifyJSON(that.VECTOR_received))
+            console.log('-------------')
+        } else if (afterStatus.totalVectorSources > beforeStatus.totalVectorSources) {
+            let vectorMessages = [];
+            Object.keys(that.VECTOR_received).forEach(source => {
+                vectorMessages.push({node: source, vectorMessages: that.VECTOR_received[source].vectorMessages, agreedHash: that.VECTOR_received[source].agreedHash});
             })
-            that.beginConsensus(arbMessages)   
+            that.beginVectorConsensus(vectorMessages)   
         }
         
     }
@@ -293,7 +321,12 @@ class MessageNode {
     }
     
     beginVectorConsensus(vectorMessage) {
-        this.gossip('VECTOR', vectorMessage);
+        const that = this;
+        let trigger = () => {
+            that.gossip('VECTOR', vectorMessage);     
+        };
+
+        Utils.interval(trigger, Utils.randomBetweenMinMax(30, 100), 1);
     }
     
     // Unlike reliable brodcast, which broadcasts the messages to *all* message nodes, gossip just communicates the messages to 
@@ -314,8 +347,11 @@ class MessageNode {
         
         // This uses a few random neighbors.
         
-        const myIndex = parseInt(this.nodeId.replace(/M/,''));
-        for (let g = -1; g <= 1; g++) {
+        const myIndex = parseInt(this.nodeId.replace(/M/,'')),
+              shouldHandleByzantine = ['ARB', 'VECTOR'].indexOf(gossipType) >= 0,
+              threshold = shouldHandleByzantine ? Math.ceil(this.f/4) : 1;
+        
+        for (let g = -threshold; g <= threshold; g++) {
             if (g !== 0) {
                 let peerIndex = myIndex + g;
                 if (peerIndex < 0) {
@@ -352,6 +388,21 @@ class MessageNodeGroup {
             let messageNode = new MessageNode(('M'+m), this.N, this.f, this);
             this.messageNodes.push(messageNode);
         }
+        
+        let f = 0;
+        while (f < this.f-1) {
+            // Randomly set some nodes are Byzantine.
+            let byzantineChosen = false;
+            while (!byzantineChosen) {
+                const r = Utils.randomBetweenMinMax(0, this.N-1);
+                if (this.messageNodes[r].myByzantineType === this.messageNodes[r]._BYZANTINE_HONEST) {
+                    this.messageNodes[r].myByzantineType = Utils.randomBetweenMinMax(1, this.messageNodes[r]._BYZANTINE_MESSAGE_ALTERER);
+                    byzantineChosen = true;
+                }
+            }
+            f += 1;
+        }
+        
         this.inputStage();
     }
     
@@ -397,11 +448,35 @@ class MessageNodeGroup {
         }
     }
     
+    getByzantineType(messageNodeId) {
+        for (let m = 0; m < this.N; m++) {
+            let messageNode = this.messageNodes[m];
+            if (messageNode.nodeId === messageNodeId) {
+                return messageNode.byzantineType;
+            }
+        }
+        return 0;
+    }
+    
     spreadTheWord(messageNodeId, gossipType, message) {
         let spread = () => {
-            PubSub.publish('GOSSIP:'+gossipType+':'+messageNodeId, message);    
-        }
-        Utils.interval(spread, Utils.randomBetweenMinMax(10, 50), 1);
+                // Good behavior.
+                PubSub.publish('GOSSIP:'+gossipType+':'+messageNodeId, message);    
+            }, dropper = () => {
+                return true;
+            }, delayer = () => {
+                Utils.interval(spread, Utils.randomBetweenMinMax(5000, 10000), 1);
+            }, alterer = () => {
+                //message = {hello: 'world'};
+                spread();
+            }
+        
+        const needsByzantine = ['ARB', 'VECTOR'].indexOf(gossipType) >= 0;
+        
+        let callbacks = [spread, dropper, delayer, alterer],
+            trigger = needsByzantine ? callbacks[this.getByzantineType(messageNodeId)] : spread;
+        
+        Utils.interval(trigger, Utils.randomBetweenMinMax(10, 50), 1);
     }
 }
 

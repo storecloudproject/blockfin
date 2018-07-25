@@ -18,6 +18,13 @@ module.exports = class Validator {
         return this.transactionBatches.length;
     }
     
+    get identifier() {
+        return {
+            id: this.id,
+            publicKey: this.keypair.public
+        }
+    }
+    
     // Methods.
     
     // Validate transaction. Currently, we only validate the signature.

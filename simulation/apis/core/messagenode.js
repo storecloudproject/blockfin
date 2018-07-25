@@ -15,6 +15,13 @@ module.exports = class MessageNode {
         return this.transactionBatches.length;
     }
     
+    get identifier() {
+        return {
+            id: this.id,
+            publicKey: this.keypair.public
+        }
+    }
+    
     // Methods.
     
     // Validate transaction batches. Currently, we only validate the signature.

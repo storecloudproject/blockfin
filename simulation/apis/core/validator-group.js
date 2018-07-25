@@ -1,5 +1,6 @@
 const Validator = require('./validator.js')
 const Utils = require('../utils.js')
+const Config = require('../config.js')
 
 /*
  * Represents a group of validators to ease generating transaction batches and simulate validators receiving and handling transactions from clients.
@@ -8,6 +9,7 @@ const Utils = require('../utils.js')
 module.exports = class ValidatorGroup {
     constructor(totalValidators) {
         this.totalValidators = (totalValidators || 61);  // Total number of validators. Defaults to allow for 20 Byzantine validators.
+        Config.network.totalValidators = this.totalValidators;
         this.validators = [];
         this.setupValidators(); 
     }
@@ -15,7 +17,9 @@ module.exports = class ValidatorGroup {
     // Setup the validators. 
     setupValidators() {
         for (let v = 0; v < this.totalValidators; v++) {
-            this.validators.push(new Validator('validator' + (v+1)));
+            let validatorNode = new Validator('validator' + (v+1));
+            Config.addValidatorKey(validatorNode.identifier);
+            this.validators.push(validatorNode);
         }
     }
     
