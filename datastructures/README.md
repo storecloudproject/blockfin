@@ -1,10 +1,10 @@
-Storecoin Block Structure
+#Storecoin Block Structure
 
-# Introduction
+## Introduction
 
 This document describes the block structure for the Storecoin blockchain. Storecoin’s [BlockFin](https://storeco.in/blockfin) leaderless, Byzantine fault tolerant consensus algorithm uses a non traditional approach to building blocks. Instead of the traditional "*create the block in the local node privately and publish it to the blockchain*" approach, it pre-creates empty blocks at regular intervals and then fills them with transactions as they arrive. Once the transactions are assembled into the pre-created blocks, they are validated and finalized. This approach is adopted to avoid chain forks and the resulting *waste*, but more importantly, to allow for a pipelined and parallel block assembly and validation process, thus improving the overall throughput.
 
-# Terminology
+## Terminology
 
 **Validator** — A node type responsible for receiving transactions from senders and validating the blocks. 
 
@@ -16,7 +16,7 @@ This document describes the block structure for the Storecoin blockchain. Storec
 
 **Finalization** — The process of validating the transactions included in the block. Each Validator performs the validation and signs the block with its private key. When more than ⅔ Validators sign the block, the block is said to be finalized. We also use the term, "Committed" to mean the same. Once a block is committed, the transactions included in the block are also automatically committed.
 
-# Block assembly and validation
+## Block assembly and validation
 
 BlockFin doesn’t produce blocks at predetermined intervals. This is because the transaction arrival at Validators is unpredictable. There may be periods of heavy traffic followed by no traffic at all. In order to minimize the transaction finalization time, the miners attempt to include them into the next available empty block as soon as possible without waiting for predetermined intervals or specific number of transactions. This means:
 
@@ -60,11 +60,11 @@ Unlike traditional consensus algorithms, BlockFin’s adaptive throughput is als
 
 Fig. 3 — Effect of number of Validators on adaptive throughput
 
-# Serialization
+## Serialization
 
 We use [Protobuf](https://developers.google.com/protocol-buffers/) for data serialization. The listings in this document use JSON notation for simplicity. The data model discussed later in this document contains Protobuf schema. 
 
-# Immutability
+## Immutability
 
 Because of the way BlockFin builds the blockchain, the traditional notion of immutability doesn’t apply for Storecoin blockchain. Traditionally, a block is immutable once it is accepted into the blockchain. In BlockFin, block creation, assembly, and validation are 3 separate steps, so a block as a whole is not immutable in one step. We are not changing the definition of immutability or interpreting it differently, but immutability applies to different sections of the block as it goes through the above steps. After finalization, the block attains immutability comparable to traditional blocks. Fig. 4 illustrates different stages in which the blocks are transformed.
 
@@ -86,9 +86,7 @@ The identities of both Validators and Messagenodes are registered in the genesis
 
 {
 
-# Validator set. Each validator is keyed by the public key of the
-
-# validator.
+### Validator set. Each validator is keyed by the public key of the validator.
 
 "validators": {
 
@@ -104,7 +102,7 @@ The identities of both Validators and Messagenodes are registered in the genesis
 
 },
 
-# Messagenode set. The data is organized similar to the validator set.
+### Messagenode set. The data is organized similar to the validator set.
 
 "messagenodes": {
 
@@ -120,7 +118,7 @@ The identities of both Validators and Messagenodes are registered in the genesis
 
 },
 
-# Backup Validator set. 
+### Backup Validator set. 
 
 "backup_validators": {
 
@@ -136,7 +134,7 @@ The identities of both Validators and Messagenodes are registered in the genesis
 
 },
 
-# Backup Messagenode set. 
+### Backup Messagenode set. 
 
 "backup_messagenodes": {
 
@@ -158,7 +156,7 @@ Listing 1 — Genesis information
 
 The block header contains the following information. Since the block takes its shape in multiple steps, the relevant header information is also broken respectively into multiple headers.
 
-# The initial block header is created with the block itself.
+### The initial block header is created with the block itself.
 
 "block_header": {
 
@@ -280,11 +278,11 @@ The block itself contains hashes and Merkle roots of associated data in order to
 
 As fig. 4 illustrates, the empty blocks may be in various stages of block assembly and validation process. The only restriction is that a block cannot be validated (and hence finalized) without finalizing its previous block. In other words, the validation step is serialized at Validators. Since transaction batching and block assembly takes majority of the time, multiple blocks can be assembled and readied for validation. 
 
-# Protobuf schema
+## Protobuf schema
 
 TODO
 
-# Fully formed sample block 
+## Fully formed sample block 
 
 TODO
 
