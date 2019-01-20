@@ -1,4 +1,4 @@
-#Storecoin Block Structure
+# Storecoin Block Structure
 
 ## Introduction
 
@@ -84,9 +84,10 @@ At launch, the genesis block is created with the genesis information. Since Bloc
 
 The identities of both Validators and Messagenodes are registered in the genesis block. Storecoin blockchain also uses backup Validators and Messagenodes, who will fill-in for primary Validators and Messagenodes in the event they were not able to maintain the necessary uptime or act maliciously and removed from their responsibilities.
 
+```
 {
 
-### Validator set. Each validator is keyed by the public key of the validator.
+#Validator set. Each validator is keyed by the public key of the validator.
 
 "validators": {
 
@@ -102,7 +103,7 @@ The identities of both Validators and Messagenodes are registered in the genesis
 
 },
 
-### Messagenode set. The data is organized similar to the validator set.
+#Messagenode set. The data is organized similar to the validator set.
 
 "messagenodes": {
 
@@ -118,7 +119,7 @@ The identities of both Validators and Messagenodes are registered in the genesis
 
 },
 
-### Backup Validator set. 
+#Backup Validator set. 
 
 "backup_validators": {
 
@@ -134,7 +135,7 @@ The identities of both Validators and Messagenodes are registered in the genesis
 
 },
 
-### Backup Messagenode set. 
+#Backup Messagenode set. 
 
 "backup_messagenodes": {
 
@@ -151,12 +152,14 @@ The identities of both Validators and Messagenodes are registered in the genesis
 }
 
 }
+```
 
 Listing 1 — Genesis information
 
 The block header contains the following information. Since the block takes its shape in multiple steps, the relevant header information is also broken respectively into multiple headers.
 
-### The initial block header is created with the block itself.
+```
+#The initial block header is created with the block itself.
 
 "block_header": {
 
@@ -181,6 +184,7 @@ The block header contains the following information. Since the block takes its s
 "create_signature_root": “<Merkle root of Messagenode signatures>”
 
 }
+```
 
 Listing 2 — Block header
 
@@ -190,6 +194,7 @@ Every new block created must be signed by the Messagenodes participating in crea
 
 When the Messagenodes agree on the set of transaction batches for the next empty block, they again sign the block, this time indicating the set of transaction batches included in the block. The Messagenodes participating in the assembly stage may be different from the Messagenodes who created the empty blocks. This can happen if between these two events, some Messagenodes dropped out and new Messagenodes joined the network. Listing 3 shows the transaction header.
 
+```
 "transaction_header": {
 
 "prev_transaction_hash": “<Transaction hash of the previous block>”,
@@ -213,6 +218,7 @@ When the Messagenodes agree on the set of transaction batches for the next empty
 	. . .
 
 ]
+```
 
 Listing 3 — Transaction header
 
@@ -222,6 +228,7 @@ At this point, the block also contains the list of transaction batches included 
 
 The final step of the block transformation is block validation and it is done by the Validators. Every Validator validates the transactions in the transaction batches included in the block. Some transactions may fail validation because of double-spend and other reasons. The block is finalized even if contains failed transactions, but the failed transactions are listed by the Validators when they sign the block. Listing 4 shows the signature of a single Validator.
 
+```
 "<Validator public key>": {
 
 	"signature": “<Signature of the validator>”,
@@ -237,6 +244,7 @@ The final step of the block transformation is block validation and it is done by
 	]
 
 }
+```
 
 Listing 4 — Validator signature
 
@@ -250,6 +258,7 @@ Each Validator writes its signature to the block. A block is finalized when the 
 
 When these conditions met, a validation header is added to the block as shown in listing 5.
 
+```
 "valdiation_header": {
 
 "prev_validation_hash": “<Validation hash of the previous block>”,
@@ -267,6 +276,7 @@ When these conditions met, a validation header is added to the block as shown in
 	]
 
 }
+```
 
 Listing 5 — Validation header
 
