@@ -1,0 +1,13 @@
+{
+  "number": 2,
+  "str": "hello world",
+  "boolean true": true,
+  "boolean false": false,
+  "null": null,
+  "object": {
+    "list": [1, 2, 3, 4],
+    "obj": {
+      "hi": "hello world"
+    }
+  }
+}
