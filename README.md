@@ -2,11 +2,10 @@
 
 ## Storecoin				
 
-Storecoin is a zero-fee, high throughput, and decentralized cryptocurrency with a Governance inspired by the U.S. Constitution.
+Storecoin is a zero-fee public blockchain that brings scalable and decentralized zero-fee payment infrastructure to the public internet. Coordinated by a decentralized governance of checks and balances, $STORE aims to become the world's reserve, zero-fee cryptocurrency.
+				
 
-					
-
-Storecoin is secured by Dynamic Proof of Stake (DyPoS) – a new protocol for public blockchains. BlockFin is the blockchain consensus protocol powering DyPoS.
+Storecoin is secured by Dynamic Proof of Stake (DyPoS) – a new protocol that blends a leaderless consensus algorithm with an equitable economic model whereby all nodes receive a share of every block reward. BlockFin is the leaderless consensus algorithm powering DyPoS.
 
 ## Why Storecoin?			
 
@@ -14,7 +13,7 @@ Storecoin’s vision is to become zero-fee, programmable payments infrastructure
 
 ## Why BlockFin?			
 
-Blockchain consensus protocols come in two major flavors -- Proof-of-Work (PoW) and Proof-of-Stake (PoS). See [PoW vs PoS](https://blockgeeks.com/guides/proof-of-work-vs-proof-of-stake/) for a quick introduction to the two flavors, how they secure the blockchains, and the major differences between them. The blockchains powered by PoW, such as Bitcoin and Ethereum, are highly decentralized by design, but less so in practice due to handful of mining pools controlling majority of hash power. See [Most Cryptocurrencies Are More Centralized Than You Think](https://news.bitcoin.com/most-cryptocurrencies-are-more-centralized-than-you-think/) for a comparison of some of the popular blockchain projects. They are also very inefficient in processing transactions. Any attempt to increase the throughput will result in poorer decentralization or complex architecture (such as sharding, off-the-chain transactions, etc.) and any attempt to increase the decentralization has poor throughput. BlockFin addresses this with an innovative approach that allows parallel block assembly and validation while requiring all validators to participate in the consensus process. BlockFin achieves true decentralization and high throughput. See [An Introduction to BlockFin](https://storeco.in/blockfin) for how BlockFin achieves decentralization and high throughput at the same time.
+Blockchain protocols come in two broad flavors -- Proof-of-Work (PoW) and Proof-of-Stake (PoS). See [PoW vs PoS](https://blockgeeks.com/guides/proof-of-work-vs-proof-of-stake/) for a quick introduction to the two flavors, how they secure the blockchain, and the major differences between them. The blockchains powered by PoW, such as Bitcoin and Ethereum, are highly decentralized by design, but less so in practice due to handful of mining pools controlling majority of the hash power. See [Most Cryptocurrencies Are More Centralized Than You Think](https://news.bitcoin.com/most-cryptocurrencies-are-more-centralized-than-you-think/) for a comparison of some of the popular blockchain projects. They are also very inefficient in processing transactions. Any attempt to increase the throughput will result in poor decentralization or complex architecture (such as sharding, off-the-chain transactions, etc.) and any attempt to increase the decentralization results in poor throughput. BlockFin addresses this with an innovative approach that allows parallel block assembly and validation while requiring all validators to participate in the consensus process. BlockFin achieves true decentralization and high throughput. See [An Introduction to BlockFin](https://storeco.in/blockfin) for how BlockFin achieves decentralization and high throughput at the same time.
 
 ## How This Project is Organized?			
 
