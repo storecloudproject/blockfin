@@ -288,9 +288,9 @@ The block itself contains hashes and Merkle roots of associated data in order to
 
 As fig. 4 illustrates, the empty blocks may be in various stages of block assembly and validation process. The only restriction is that a block cannot be validated (and hence finalized) without finalizing its previous block. In other words, the validation step is serialized at Validators. Since transaction batching and block assembly takes majority of the time, multiple blocks can be assembled and readied for validation. 
 
-## Protobuf schema
+## Database schema
 
-TODO
+[BlockFin database schema](schema.md)
 
 ## Fully formed sample block 
 

@@ -44,7 +44,7 @@ We assume Postgres database for its NoSQL capability [1], but the schema is (gen
 The schema is versioned in the schema name itself for clarity. The initial version is 1.0. A "major_minor" (“1_0”) schema numbering convention is used. The schema is owned by a specific user, **blockfin**.
 
 ```
-CREATE SCHEMA **blockfin_v1_0** AUTHORIZATION **blockfin**
+CREATE SCHEMA blockfin_v1_0 AUTHORIZATION blockfin
 ```
 
 ## Tablespace
@@ -52,7 +52,7 @@ CREATE SCHEMA **blockfin_v1_0** AUTHORIZATION **blockfin**
 A separate tablespace is defined for the blockchain database. The tablespace is owned by the same user, who owns the schema. In fact, all database operations are performed with the privileges given to this user account. The tablespace is versioned so as to maintain the data for multiple versions, if needed.
 
 ```
-CREATE TABLESPACE **blockfin_v1_0** OWNER **blockfin** LOCATION '/data/blockfin_v1_0';
+CREATE TABLESPACE blockfin_v1_0 OWNER blockfin LOCATION '/data/blockfin_v1_0';
 ```
 
 ## Database
@@ -60,7 +60,7 @@ CREATE TABLESPACE **blockfin_v1_0** OWNER **blockfin** LOCATION '/data/blockfin_
 The main database for the blockchain is defined as follows.
 
 ```
-CREATE DATABASE **blockfin** OWNER **blockfin** TABLESPACE **blockfin_v1_0**;
+CREATE DATABASE blockfin OWNER blockfin TABLESPACE blockfin_v1_0;
 ```
 
 ## Tables
@@ -72,7 +72,7 @@ An immutable table (a better name is, *append-only* table) is a table where the 
 Immutability on tables is achieved by revoking the UPDATE and DELETE privileges on the respective tables. For example:
 
 ```
-REVOKE UPDATE DELETE TRUNCATE ON <table name> FROM **blockfin**;
+REVOKE UPDATE DELETE TRUNCATE ON <table name> FROM blockfin;
 ```
 
 Note that this approach doesn’t prevent superusers from performing revoked tasks. The idea is to prevent such actions in the application flow, where the queries are executed with the privileges granted to the user, blockfin. So, even if there is a bug in the application code where an update or delete action is performed on immutable tables, the action is rejected at the database level.
@@ -86,13 +86,13 @@ The block table models individual blocks of Storecoin blockchain. This table is 
 Each block is identified by a sequence number. A SEQUENCE is created to produce the next block id.
 
 ```
-CREATE **SEQUENCE** blockfin_v1_0.**block_id_seq**;
+CREATE SEQUENCE blockfin_v1_0.block_id_seq;
 ```
 
 Each block has a block type, which describes the type of the block. The types can be as follows:
 
 ```
-CREATE TYPE **block_type** AS ENUM ('genesis', 'identity', 'transaction');
+CREATE TYPE block_type AS ENUM ('genesis', 'identity', 'transaction');
 ```
 
 where:
@@ -106,11 +106,11 @@ where:
 The block table has block_id as its primary key.
 
 ```
-CREATE IF NOT EXISTS TABLE blockfin_v1_0.**BLOCK**(
+CREATE IF NOT EXISTS TABLE blockfin_v1_0.BLOCK(
 
  /* A sequenced block id */
 
- block_id INTEGER **PRIMARY** **KEY** **DEFAULT** nextval('blockfin_v1_0.block_id_seq'),
+ block_id INTEGER PRIMARY KEY DEFAULT nextval('blockfin_v1_0.block_id_seq'),
 
  /* Block type, identifying the type of the block */
 
@@ -132,9 +132,7 @@ CREATE IF NOT EXISTS TABLE blockfin_v1_0.**BLOCK**(
 
   */ 
 
- assembly_header VARCHAR(32) REFERENCES blockfin_v1_0. 
-
-BLOCK_ASSEMBLY_HEADER(block_hash),
+ assembly_header VARCHAR(32) REFERENCES blockfin_v1_0.BLOCK_ASSEMBLY_HEADER(block_hash),
 
  /* The pointer to the block header created at the time of block validation.
 
@@ -142,9 +140,7 @@ BLOCK_ASSEMBLY_HEADER(block_hash),
 
   */ 
 
- validate_header VARCHAR(32) REFERENCES blockfin_v1_0. 
-
-BLOCK_VALIDATION_HEADER(block_hash),
+ validate_header VARCHAR(32) REFERENCES blockfin_v1_0.BLOCK_VALIDATION_HEADER(block_hash),
 
  /* The pointer to the block header created at the time of block sealing phase.
 
@@ -152,35 +148,25 @@ BLOCK_VALIDATION_HEADER(block_hash),
 
   */ 
 
- seal_header VARCHAR(32) REFERENCES blockfin_v1_0. 
-
-BLOCK_SEALING_HEADER(block_hash),
+ seal_header VARCHAR(32) REFERENCES blockfin_v1_0.BLOCK_SEALING_HEADER(block_hash),
 
  /* The pointer to the transaction batches included in this block. */ 
 
- transaction_batches VARCHAR(32) REFERENCES blockfin_v1_0. 
-
-TRANSACTION_BATCHES(batch_hash),
+ transaction_batches VARCHAR(32) REFERENCES blockfin_v1_0.TRANSACTION_BATCHES(batch_hash),
 
  /* The pointer to the Messagenode signatures added during block creation. */ 
 
- create_signatures VARCHAR(32) REFERENCES blockfin_v1_0. 
-
-CREATE_SIGNATURES(signature_hash),
+ create_signatures VARCHAR(32) REFERENCES blockfin_v1_0.CREATE_SIGNATURES(signature_hash),
 
  /* The pointer to the Validator signatures added during block validation. */ 
 
- validate_signatures VARCHAR(32) REFERENCES blockfin_v1_0. 
-
-VALIDATE_SIGNATURES(signature_hash),
+ validate_signatures VARCHAR(32) REFERENCES blockfin_v1_0.VALIDATE_SIGNATURES(signature_hash),
 
  /* The pointer to the sealing signatures added during block sealing phase. */ 
 
- sealing_signatures VARCHAR(32) REFERENCES blockfin_v1_0. 
+ sealing_signatures VARCHAR(32) REFERENCES blockfin_v1_0.SEALING_SIGNATURES(signature_hash)
 
-SEALING_SIGNATURES(signature_hash)
-
-) TABLESPACE **blockfin_v1_0**;
+) TABLESPACE blockfin_v1_0;
 ```
 
 This table essentially consists of references to other tables. The columns are populated as the consensus progresses through it stages.
@@ -191,9 +177,9 @@ This table models the block header created at the time of block creation. Unlike
 
 The BLOCK_CREATION_HEADER table contains the data produced when an empty block is created and the block is added to the blockchain.
 ```
-CREATE IF NOT EXISTS TABLE blockfin_v1_0.**BLOCK_CREATION_HEADER**(
+CREATE IF NOT EXISTS TABLE blockfin_v1_0.BLOCK_CREATION_HEADER(
 
- block_id INTEGER **PRIMARY** **KEY** REFERENCES blockfin_v1_0.BLOCK(block_id),
+ block_id INTEGER PRIMARY KEY REFERENCES blockfin_v1_0.BLOCK(block_id),
 
  create_time TIMESTAMP NOT NULL,
 
@@ -215,7 +201,7 @@ CREATE IF NOT EXISTS TABLE blockfin_v1_0.**BLOCK_CREATION_HEADER**(
 
  block_hash VARCHAR(32) NOT NULL
 
-) TABLESPACE **blockfin_v1_0**;
+) TABLESPACE blockfin_v1_0;
 ```
 
 ## Identities table
@@ -223,7 +209,7 @@ CREATE IF NOT EXISTS TABLE blockfin_v1_0.**BLOCK_CREATION_HEADER**(
 The IDENTITIES table contains miner identities. The table is described as follows.
 
 ```
-CREATE IF NOT EXISTS TABLE blockfin_v1_0.**IDENTITIES**(
+CREATE IF NOT EXISTS TABLE blockfin_v1_0.IDENTITIES(
 
  /*
 
@@ -261,9 +247,9 @@ CREATE IF NOT EXISTS TABLE blockfin_v1_0.**IDENTITIES**(
 
   */
 
- identity_hash VARCHAR(32) **PRIMARY** **KEY** NOT NULL
+ identity_hash VARCHAR(32) PRIMARY KEY NOT NULL
 
-) TABLESPACE **blockfin_v1_0**;
+) TABLESPACE blockfin_v1_0;
 ```
 
 ## Block_Assembly_Header table
@@ -271,9 +257,9 @@ CREATE IF NOT EXISTS TABLE blockfin_v1_0.**IDENTITIES**(
 This table models the block header created at the time of block assembly. The BLOCK_ASSEMBLY_HEADER table contains the data produced when an empty block is assembled by the Messagenodes and the block is ready for validation. At this time, the transaction batches are already available.
 
 ```
-CREATE IF NOT EXISTS TABLE blockfin_v1_0.**BLOCK_ASSEMBLY_HEADER**(
+CREATE IF NOT EXISTS TABLE blockfin_v1_0.BLOCK_ASSEMBLY_HEADER(
 
- block_id INTEGER **PRIMARY** **KEY **REFERENCES blockfin_v1_0.BLOCK(block_id),
+ block_id INTEGER PRIMARY KEY REFERENCES blockfin_v1_0.BLOCK(block_id),
 
  assembly_time TIMESTAMP NOT NULL,
 
@@ -285,7 +271,7 @@ CREATE IF NOT EXISTS TABLE blockfin_v1_0.**BLOCK_ASSEMBLY_HEADER**(
 
  block_hash VARCHAR(32) NOT NULL
 
-) TABLESPACE **blockfin_v1_0**;
+) TABLESPACE blockfin_v1_0;
 ```
 
 ## Block_Validation_Header table
@@ -293,9 +279,9 @@ CREATE IF NOT EXISTS TABLE blockfin_v1_0.**BLOCK_ASSEMBLY_HEADER**(
 This table models the block header created at the time of block validation. The BLOCK_VALIDATION_HEADER table contains the data produced when an assembled block is validated by the validators and the block is finalized.
 
 ```
-CREATE IF NOT EXISTS TABLE blockfin_v1_0.**BLOCK_VALIDATION_HEADER**(
+CREATE IF NOT EXISTS TABLE blockfin_v1_0.BLOCK_VALIDATION_HEADER(
 
- block_id INTEGER **PRIMARY** **KEY **REFERENCES blockfin_v1_0.BLOCK(block_id),
+ block_id INTEGER PRIMARY KEY REFERENCES blockfin_v1_0.BLOCK(block_id),
 
  validate_time TIMESTAMP NOT NULL,
 
@@ -327,7 +313,7 @@ CREATE IF NOT EXISTS TABLE blockfin_v1_0.**BLOCK_VALIDATION_HEADER**(
 
  block_hash VARCHAR(32) NOT NULL
 
-) TABLESPACE **blockfin_v1_0**;
+) TABLESPACE blockfin_v1_0;
 ```
 
 ## Block_Sealing_Header table
@@ -335,9 +321,9 @@ CREATE IF NOT EXISTS TABLE blockfin_v1_0.**BLOCK_VALIDATION_HEADER**(
 This table models the block header created at the time of block sealing. The BLOCK_SEALING_HEADER table contains the data produced when a finalized block is sealed by dGuards. The early releases of Storecoin blockchain won’t have dGuards and hence there is no sealing phase, but this table is defined for completeness.
 
 ```
-CREATE IF NOT EXISTS TABLE blockfin_v1_0.**BLOCK_SEALING_HEADER**(
+CREATE IF NOT EXISTS TABLE blockfin_v1_0.BLOCK_SEALING_HEADER(
 
- block_id INTEGER **PRIMARY** **KEY **REFERENCES blockfin_v1_0.BLOCK(block_id),
+ block_id INTEGER PRIMARY KEY REFERENCES blockfin_v1_0.BLOCK(block_id),
 
  sealing_time TIMESTAMP NOT NULL,
 
@@ -349,7 +335,7 @@ CREATE IF NOT EXISTS TABLE blockfin_v1_0.**BLOCK_SEALING_HEADER**(
 
  block_hash VARCHAR(32) NOT NULL
 
-) TABLESPACE **blockfin_v1_0**;
+) TABLESPACE blockfin_v1_0;
 ```
 
 ## Transactions table
@@ -357,7 +343,7 @@ CREATE IF NOT EXISTS TABLE blockfin_v1_0.**BLOCK_SEALING_HEADER**(
 The TRANSACTIONS table models the transactions submitted to Validators. The transactions are signed by the senders. The table is keyed with transaction hash, which is referenced everywhere else.
 
 ```
-CREATE IF NOT EXISTS TABLE blockfin_v1_0.**TRANSACTIONS**(
+CREATE IF NOT EXISTS TABLE blockfin_v1_0.TRANSACTIONS(
 
  /* From address. Addresses are similar to Bitcoin addresses and are 35 characters 
 
@@ -397,9 +383,9 @@ CREATE IF NOT EXISTS TABLE blockfin_v1_0.**TRANSACTIONS**(
 
  /* Transaction hash. SHA256(signature). */
 
- transaction_hash CHAR(32) **PRIMARY** **KEY **NOT NULL
+ transaction_hash CHAR(32) PRIMARY KEY NOT NULL
 
-) TABLESPACE **blockfin_v1_0**;
+) TABLESPACE blockfin_v1_0;
 ```
 
 The transaction table can be queried for specific from_address and to_address or a combination of both. So, the following indexes are defined. 
@@ -427,15 +413,15 @@ The TRANSACTION_BATCHES table models the transaction batches created by the Vali
 Each transaction batch contains the signature of the Validator producing the batch, the hash of which serves as its primary key.
 
 ```
-CREATE IF NOT EXISTS TABLE blockfin_v1_0.**TRANSACTION_BATCHES**(
+CREATE IF NOT EXISTS TABLE blockfin_v1_0.TRANSACTION_BATCHES(
 
  /* Validator signature. */
 
- validator_signature CHAR(88) NOT NULL**,**
+ validator_signature CHAR(88) NOT NULL,
 
  /* SHA256(validator_signature). */
 
- batch_hash CHAR(32) **PRIMARY** **KEY **NOT NULL**,**
+ batch_hash CHAR(32) PRIMARY KEY NOT NULL,
 
  /* The transaction hashes are referenced here. */
 
@@ -455,7 +441,7 @@ CREATE IF NOT EXISTS TABLE blockfin_v1_0.**TRANSACTION_BATCHES**(
 
  public_key CHAR(44) NOT NULL 
 
-) TABLESPACE **blockfin_v1_0**;
+) TABLESPACE blockfin_v1_0;
 ```
 
 ## Create_Signatures table
@@ -463,21 +449,21 @@ CREATE IF NOT EXISTS TABLE blockfin_v1_0.**TRANSACTION_BATCHES**(
 The CREATE_SIGNATURES table models the Messagenode signatures created by each Messagenode as it attests the newly created block. Since each Messagenode attests the block asynchronously, each row represents the signature of one Messagenode for a given block.
 
 ```
-CREATE IF NOT EXISTS TABLE blockfin_v1_0.**CREATE_SIGNATURES**(
+CREATE IF NOT EXISTS TABLE blockfin_v1_0.CREATE_SIGNATURES(
 
  /* The block for which signatures are produced.
 
- block_id INTEGER **PRIMARY** **KEY **REFERENCES blockfin_v1_0.BLOCK(block_id),
+ block_id INTEGER PRIMARY KEY REFERENCES blockfin_v1_0.BLOCK(block_id),
 
  /* Messagenode signature. */
 
- messagenode_signature CHAR(88) NOT NULL**,**
+ messagenode_signature CHAR(88) NOT NULL,
 
  /* Messagenode’s public key. */
 
  public_key CHAR(44) NOT NULL 
 
-) TABLESPACE **blockfin_v1_0**;
+) TABLESPACE blockfin_v1_0;
 ```
 
 ## Assemble_Signatures table
@@ -485,21 +471,21 @@ CREATE IF NOT EXISTS TABLE blockfin_v1_0.**CREATE_SIGNATURES**(
 The ASSEMBLE_SIGNATURES table models the Messagenode signatures created by each Messagenode as it assembles transaction batches into an empty block. Since each Messagenode attests the block asynchronously, each row represents the signature of one Messagenode for a given block.
 
 ```
-CREATE IF NOT EXISTS TABLE blockfin_v1_0.**ASSEMBLE_SIGNATURES**(
+CREATE IF NOT EXISTS TABLE blockfin_v1_0.ASSEMBLE_SIGNATURES(
 
  /* The block for which signatures are produced.
 
- block_id INTEGER **PRIMARY** **KEY **REFERENCES blockfin_v1_0.BLOCK(block_id),
+ block_id INTEGER PRIMARY KEY REFERENCES blockfin_v1_0.BLOCK(block_id),
 
  /* Messagenode signature. */
 
- messagenode_signature CHAR(88) NOT NULL**,**
+ messagenode_signature CHAR(88) NOT NULL,
 
  /* Messagenode’s public key. */
 
  public_key CHAR(44) NOT NULL 
 
-) TABLESPACE **blockfin_v1_0**;
+) TABLESPACE blockfin_v1_0;
 ```
 
 ## Validate_Signatures table
@@ -507,21 +493,21 @@ CREATE IF NOT EXISTS TABLE blockfin_v1_0.**ASSEMBLE_SIGNATURES**(
 The VALIDATE_SIGNATURES table models the Validator signatures created by each Validator as it validates the blocks and finalizes it. Since each Validator validates the block asynchronously, each row represents the signature of one Validator for a given block.
 
 ```
-CREATE IF NOT EXISTS TABLE blockfin_v1_0.**VALIDATE_SIGNATURES**(
+CREATE IF NOT EXISTS TABLE blockfin_v1_0.VALIDATE_SIGNATURES(
 
  /* The block for which signatures are produced.
 
- block_id INTEGER **PRIMARY** **KEY **REFERENCES blockfin_v1_0.BLOCK(block_id),
+ block_id INTEGER PRIMARY KEY REFERENCES blockfin_v1_0.BLOCK(block_id),
 
  /* Validator signature. */
 
- validator_signature CHAR(88) NOT NULL**,**
+ validator_signature CHAR(88) NOT NULL,
 
  /* Validator’s public key. */
 
  public_key CHAR(44) NOT NULL 
 
-) TABLESPACE **blockfin_v1_0**;
+) TABLESPACE blockfin_v1_0;
 ```
 
 # Next steps
