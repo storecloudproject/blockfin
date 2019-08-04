@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This document describes the block structure for the Storecoin blockchain. Storecoin’s [BlockFin](https://storeco.in/blockfin) leaderless, Byzantine fault tolerant consensus algorithm uses a non traditional approach to building blocks. Instead of the traditional "*create the block in the local node privately and publish it to the blockchain*" approach, it pre-creates empty blocks at regular intervals and then fills them with transactions as they arrive. Once the transactions are assembled into the pre-created blocks, they are validated and finalized. This approach is adopted to avoid chain forks and the resulting *waste*, but more importantly, to allow for a pipelined and parallel block assembly and validation process, thus improving the overall throughput.
+This document describes the block structure for the Storecoin blockchain. Storecoin’s [BlockfinBFT](https://research.storecoin.com/BlockfinBFT) leaderless, Byzantine fault tolerant consensus algorithm uses a non traditional approach to building blocks. Instead of the traditional "*create the block in the local node privately and publish it to the blockchain*" approach, it pre-creates empty blocks at regular intervals and then fills them with transactions as they arrive. Once the transactions are assembled into the pre-created blocks, they are validated and finalized. This approach is adopted to avoid chain forks and the resulting *waste*, but more importantly, to allow for a pipelined and parallel block assembly and validation process, thus improving the overall throughput.
 
 ## Terminology
 
@@ -18,7 +18,7 @@ This document describes the block structure for the Storecoin blockchain. Storec
 
 ## Block assembly and validation
 
-BlockFin doesn’t produce blocks at predetermined intervals. This is because the transaction arrival at Validators is unpredictable. There may be periods of heavy traffic followed by no traffic at all. In order to minimize the transaction finalization time, the miners attempt to include them into the next available empty block as soon as possible without waiting for predetermined intervals or specific number of transactions. This means:
+BlockfinBFT doesn’t produce blocks at predetermined intervals. This is because the transaction arrival at Validators is unpredictable. There may be periods of heavy traffic followed by no traffic at all. In order to minimize the transaction finalization time, the miners attempt to include them into the next available empty block as soon as possible without waiting for predetermined intervals or specific number of transactions. This means:
 
 * there will not be any empty blocks finalized
 
@@ -26,11 +26,11 @@ BlockFin doesn’t produce blocks at predetermined intervals. This is because th
 
 * block finalization interval is not constant and varies depending on the time it takes for all validators to validate the transactions in the block.
 
-While block finalization takes finite time to complete, BlockFin’s pipelined block validation process allows parallelization of independent steps. So, while a block is being finalized, future blocks may be getting assembled at the same time. So, the effective rate of block finalization is higher than the rate at which individual blocks are finalized as shown in fig. 1.
+While block finalization takes finite time to complete, BlockfinBFT’s pipelined block validation process allows parallelization of independent steps. So, while a block is being finalized, future blocks may be getting assembled at the same time. So, the effective rate of block finalization is higher than the rate at which individual blocks are finalized as shown in fig. 1.
 
 ![image alt text](pipeline.png)
 
-Fig. 1 — BlockFin’s pipelined block assembly and validation process
+Fig. 1 — BlockfinBFT’s pipelined block assembly and validation process
 
 The block assembly and validation process works as follows:
 
@@ -46,15 +46,15 @@ The block assembly and validation process works as follows:
 
 6. When at least (⅔ +1) Validators sign the block, the block is finalized.
 
-Since BlockFin *assembles* transactions into pre-created empty blocks, all stakeholders — transaction senders, Validators, Messagenodes, anyone querying the blockchain state — know exactly which block is being assembled, which block is currently being validated, which block is finalized, and so on. This public visibility into the block assembly and validation process sets BlockFin apart from other consensus algorithms where the new block won’t be visible to the network until the winning miner broadcasts the new block to the network and the nodes accept that block. This property is critical to avoiding possible chain forks and the expensive checks to necessary select the longest chain.
+Since BlockfinBFT *assembles* transactions into pre-created empty blocks, all stakeholders — transaction senders, Validators, Messagenodes, anyone querying the blockchain state — know exactly which block is being assembled, which block is currently being validated, which block is finalized, and so on. This public visibility into the block assembly and validation process sets BlockfinBFT apart from other consensus algorithms where the new block won’t be visible to the network until the winning miner broadcasts the new block to the network and the nodes accept that block. This property is critical to avoiding possible chain forks and the expensive checks to necessary select the longest chain.
 
 Fig. 2 illustrates theoretical throughput of Storecoin blockchain at launch scenario. For this illustration, we assumed the participation of 22 Validators and 8 Messagenodes. As fig. 2 illustrates, the throughput depends on network latency and the rate at which transactions arrive at Validators. We call this adaptive throughput. With a batch interval of 500ms and a network latency of 35ms, we can achieve a throughput of 4,325, if a transaction arrives every other ms at each of the validators. If on the other hand, transactions arrive every 10ms, the throughput drops to 865. 
 
 ![image alt text](launch_tps.png)
 
-Fig. 2 — An illustration of BlockFin’s adaptive throughput 
+Fig. 2 — An illustration of BlockfinBFT’s adaptive throughput 
 
-Unlike traditional consensus algorithms, BlockFin’s adaptive throughput is also influenced by the number of Validators receiving the transactions. Assuming a future phase with 66 Validators and 24 Messagenodes, the theoretical throughput will be as shown in fig. 3. Of course, the throughput peaks at certain number of Validators before it falls off due to overwhelmed block validation process. 
+Unlike traditional consensus algorithms, BlockfinBFT’s adaptive throughput is also influenced by the number of Validators receiving the transactions. Assuming a future phase with 66 Validators and 24 Messagenodes, the theoretical throughput will be as shown in fig. 3. Of course, the throughput peaks at certain number of Validators before it falls off due to overwhelmed block validation process. 
 
 ![image alt text](phase3_tps.png)
 
@@ -66,7 +66,7 @@ We use [Protobuf](https://developers.google.com/protocol-buffers/) for data seri
 
 ## Immutability
 
-Because of the way BlockFin builds the blockchain, the traditional notion of immutability doesn’t apply for Storecoin blockchain. Traditionally, a block is immutable once it is accepted into the blockchain. In BlockFin, block creation, assembly, and validation are 3 separate steps, so a block as a whole is not immutable in one step. We are not changing the definition of immutability or interpreting it differently, but immutability applies to different sections of the block as it goes through the above steps. After finalization, the block attains immutability comparable to traditional blocks. Fig. 4 illustrates different stages in which the blocks are transformed.
+Because of the way BlockfinBFT builds the blockchain, the traditional notion of immutability doesn’t apply for Storecoin blockchain. Traditionally, a block is immutable once it is accepted into the blockchain. In BlockfinBFT, block creation, assembly, and validation are 3 separate steps, so a block as a whole is not immutable in one step. We are not changing the definition of immutability or interpreting it differently, but immutability applies to different sections of the block as it goes through the above steps. After finalization, the block attains immutability comparable to traditional blocks. Fig. 4 illustrates different stages in which the blocks are transformed.
 
  
 
@@ -74,7 +74,7 @@ Because of the way BlockFin builds the blockchain, the traditional notion of imm
 
 Fig. 4 — Different stages of block transformation
 
-At launch, the genesis block is created with the genesis information. Since BlockFin is a PoS blockchain, the identities of first set of miners is captured in the genesis block. Each miner has the following publicly identifiable information.
+At launch, the genesis block is created with the genesis information. Since BlockfinBFT is a PoS blockchain, the identities of first set of miners is captured in the genesis block. Each miner has the following publicly identifiable information.
 
 1. Public key — The public key of the miner, so the signatures produced by the miner can be verified with it.
 
@@ -290,7 +290,7 @@ As fig. 4 illustrates, the empty blocks may be in various stages of block assemb
 
 ## Database schema
 
-[BlockFin database schema](schema.md)
+[BlockfinBFT database schema](schema.md)
 
 ## Fully formed sample block 
 
