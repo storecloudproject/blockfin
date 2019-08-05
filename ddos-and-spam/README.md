@@ -1,4 +1,4 @@
-#Rate Limiting and DDoS Mitigation
+# Rate Limiting and DDoS Mitigation
 
 ## Introduction
 
@@ -24,7 +24,7 @@ P2p networks are generally more resilient to DDoS attacks than centralized or cl
 
 There is a myth that transaction fees are instituted to prevent DDoS and spam. As discussed in the Spam vs DDoS section, spamming a network costs very little. DDoS attack doesn’t even to have to send legitimate transactions, so transaction fees don’t deter DDoS attacks. In the attack described in [7], the spammers in fact paid highest transaction fees possible in order to delay transactions that include smaller fees.
 
-## **BTC Spam attack. 200,000 unconfirmed transactions halts bitcoin**
+  **BTC Spam attack. 200,000 unconfirmed transactions halts bitcoin**
 
 . . . where they are paying the highest fees to halt the network. Bitcoin developers delivered but we're still waiting on miners and spammers holding the chain hostage. Not paying highest fee takes transactions 10+ hours to get confirmed.
 
